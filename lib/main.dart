@@ -1,139 +1,44 @@
 import 'package:flutter/material.dart';
-import 'package:english_words/english_words.dart';
 
-void main() => runApp(MyApp());
+import 'package:hw_2/views/home_page.dart';
+
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Homework #1',
-        home: const RandomWords(),
-        theme: ThemeData(primaryColor: Colors.white));
+      title: 'Дія',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: InheritedCounter(child: const HomePage()),
+    );
   }
 }
 
-class RandomWords extends StatefulWidget {
-  const RandomWords({Key? key}) : super(key: key);
+class InheritedCounter extends InheritedWidget {
+  // data structure is a map because InheritedWidgets are immutable
+  final Map _counter = {'val': 0};
+  // ignore: annotate_overrides, overridden_fields
+  final Widget child;
+
+  InheritedCounter({Key? key, this.child = const HomePage()})
+      : super(key: key, child: child);
+
+  set(newValue) {
+    _counter['val'] = newValue;
+  }
+
+  get() {
+    return _counter['val'];
+  }
+
+  get counter => _counter['val'];
 
   @override
-  _RandomWordsState createState() => _RandomWordsState();
-}
+  bool updateShouldNotify(InheritedCounter oldWidget) => true;
 
-class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = <WordPair>[];
-  final _saved = <WordPair>[];
-  final _biggerFont = const TextStyle(fontSize: 18.0);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Startup Name Generator'),
-        actions: [
-          IconButton(icon: const Icon(Icons.list), onPressed: _pushSaved),
-        ],
-      ),
-      body: _buildSuggestions(),
-    );
-  }
-
-  void _pushSaved() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (BuildContext context) {
-          final tiles = _saved.map(
-            (WordPair pair) {
-              return ListTile(
-                title: Text(
-                  pair.asPascalCase,
-                  style: _biggerFont,
-                ),
-              );
-            },
-          );
-          final divided = tiles.isNotEmpty
-              ? ListTile.divideTiles(context: context, tiles: tiles).toList()
-              : <Widget>[];
-
-          return Scaffold(
-              appBar: AppBar(
-                title: const Text('Saved Suggestions'),
-              ),
-              body: ListView(
-                children: divided,
-              ));
-        },
-      ),
-    );
-  }
-
-  void _showSnackBar(BuildContext context, WordPair pair) {
-    final scaffold = ScaffoldMessenger.of(context);
-
-    scaffold.showSnackBar(
-      SnackBar(
-        duration: const Duration(seconds: 3),
-        content: Text('Added to favorite: ' + pair.asCamelCase.toString()),
-        action: SnackBarAction(
-          label: 'OK',
-          onPressed: () {
-            scaffold.hideCurrentSnackBar();
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSuggestions() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemBuilder: (context, i) {
-        if (i.isOdd) return const Divider();
-
-        final index = i ~/ 2;
-        if (index >= _suggestions.length) {
-          // generate 10 more pairings if you've reached the end
-          _suggestions.addAll(generateWordPairs().take(10));
-        }
-        return _buildRow(_suggestions[index]);
-      },
-    );
-  }
-
-  Widget _buildRow(WordPair pair) {
-    final alreadySaved = _saved.contains(pair);
-    final colors = [
-      Colors.red,
-      Colors.orange,
-      Colors.amber,
-      Colors.green,
-      Colors.blue,
-      Colors.purple
-    ];
-    var currentColor = (colors..shuffle()).first;
-
-    return ListTile(
-        title: Text(
-          pair.asPascalCase,
-          style: TextStyle(
-            fontSize: 18.0,
-            color: alreadySaved ? currentColor : Colors.black,
-          ),
-        ),
-        leading: Icon(
-          alreadySaved ? Icons.favorite : Icons.favorite_border,
-          color: alreadySaved ? currentColor : null,
-        ),
-        onTap: () {
-          setState(() {
-            if (alreadySaved) {
-              _saved.remove(pair);
-            } else {
-              _saved.add(pair);
-              _showSnackBar(context, pair);
-            }
-          });
-        });
-  }
+  static InheritedCounter? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<InheritedCounter>();
 }
