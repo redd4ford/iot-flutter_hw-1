@@ -8,12 +8,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Homework #1',
-        home: RandomWords(),
-        theme: ThemeData(primaryColor: Colors.blueAccent));
+        home: const RandomWords(),
+        theme: ThemeData(primaryColor: Colors.white));
   }
 }
 
 class RandomWords extends StatefulWidget {
+  const RandomWords({Key? key}) : super(key: key);
+
   @override
   _RandomWordsState createState() => _RandomWordsState();
 }
@@ -29,7 +31,7 @@ class _RandomWordsState extends State<RandomWords> {
       appBar: AppBar(
         title: const Text('Startup Name Generator'),
         actions: [
-          IconButton(icon: Icon(Icons.list), onPressed: _pushSaved),
+          IconButton(icon: const Icon(Icons.list), onPressed: _pushSaved),
         ],
       ),
       body: _buildSuggestions(),
@@ -56,12 +58,29 @@ class _RandomWordsState extends State<RandomWords> {
 
           return Scaffold(
               appBar: AppBar(
-                title: Text('Saved Suggestions'),
+                title: const Text('Saved Suggestions'),
               ),
               body: ListView(
                 children: divided,
               ));
         },
+      ),
+    );
+  }
+
+  void _showSnackBar(BuildContext context, WordPair pair) {
+    final scaffold = ScaffoldMessenger.of(context);
+
+    scaffold.showSnackBar(
+      SnackBar(
+        duration: const Duration(seconds: 3),
+        content: Text('Added to favorite: ' + pair.asCamelCase.toString()),
+        action: SnackBarAction(
+          label: 'OK',
+          onPressed: () {
+            scaffold.hideCurrentSnackBar();
+          },
+        ),
       ),
     );
   }
@@ -84,14 +103,27 @@ class _RandomWordsState extends State<RandomWords> {
 
   Widget _buildRow(WordPair pair) {
     final alreadySaved = _saved.contains(pair);
+    final colors = [
+      Colors.red,
+      Colors.orange,
+      Colors.amber,
+      Colors.green,
+      Colors.blue,
+      Colors.purple
+    ];
+    var currentColor = (colors..shuffle()).first;
+
     return ListTile(
         title: Text(
           pair.asPascalCase,
-          style: _biggerFont,
+          style: TextStyle(
+            fontSize: 18.0,
+            color: alreadySaved ? currentColor : Colors.black,
+          ),
         ),
-        trailing: Icon(
+        leading: Icon(
           alreadySaved ? Icons.favorite : Icons.favorite_border,
-          color: alreadySaved ? Colors.red : null,
+          color: alreadySaved ? currentColor : null,
         ),
         onTap: () {
           setState(() {
@@ -99,6 +131,7 @@ class _RandomWordsState extends State<RandomWords> {
               _saved.remove(pair);
             } else {
               _saved.add(pair);
+              _showSnackBar(context, pair);
             }
           });
         });
